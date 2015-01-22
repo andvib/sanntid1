@@ -6,12 +6,13 @@ import (."fmt"
 
 var i int
 
-var c = make(chan int,1)
+var c = make(chan int,0)
 
 func threadOne(){
 	for x := 0 ; x <= 1000000 ; x++{
-		for; <-c != 1; {}
-		c<-0
+		// for; <-c != 1; {}
+		// c<-0
+		<- c
 		i++
 		c<-1
 	}
@@ -19,8 +20,9 @@ func threadOne(){
 
 func threadTwo(){
 	for y := 0 ; y <= 1000000 ; y++{
-		for ;<-c != 1;{}
-		c<-0
+		// for ;<-c != 1;{}
+		// c<-0
+		<- c
 		i--
 		c<-1
 	}
@@ -35,6 +37,8 @@ func main() {
 
 	go threadOne()
 	go threadTwo()
+
+	c <- 0
 
 	time.Sleep(1000*time.Millisecond)
 	Println(i)
