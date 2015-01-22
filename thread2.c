@@ -2,19 +2,26 @@
 #include <stdio.h>
 
 int i = 0;
+pthread_mutex_t m1;
 
 void* threadOne(){
 	int x;
 	for(x = 0 ; x <= 1000000 ; x++){
+		pthread_mutex_lock(&m1);
 		i ++;
+		pthread_mutex_unlock(&m1);
 	}
+	return NULL;
 }
 
 void* threadTwo(){
 	int y;
 	for(y = 0 ; y <= 1000000 ; y++){
+		pthread_mutex_lock(&m1);
 		i--;
+		pthread_mutex_unlock(&m1);
 	}
+	return NULL;
 }
 
 int main(){
