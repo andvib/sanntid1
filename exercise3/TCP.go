@@ -1,0 +1,32 @@
+package main
+
+import("net")
+
+func receive(){
+	received := make([]byte,1024)
+	recAddr, _ := net.ResolveTCPAddr("tcp", ":33546")
+	listener, _ := net.ListenTCP("tcp",recAddr)
+	conn, _ := listener.AcceptTCP()
+	length, _ := conn.Read(received)
+	
+	println(length)
+	println(string(received))
+}
+
+
+func send(){
+	sendAddr, _ := net.ResolveTCPAddr("tcp", "129.241.187.148:33546")
+	conn, _ :=net.DialTCP("tcp", nil, sendAddr)
+	
+	a := "Connect to: 129.241.187.148:33546\x00"
+	b := []byte(a)
+
+	rec, _ := conn.Write(b)
+	println(rec)
+}
+
+
+func main(){
+	receive()
+	send()
+}
