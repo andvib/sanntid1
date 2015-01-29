@@ -4,9 +4,9 @@ import("net")
 
 func receive(){
 	received := make([]byte,1024)
-	recAddr, _ := net.ResolveTCPAddr("tcp", ":33546")
+	recAddr, _ := net.ResolveTCPAddr("tcp4", "129.241.187.136:33546")
 	listener, _ := net.ListenTCP("tcp",recAddr)
-	conn, _ := listener.AcceptTCP()
+	conn, _ := listener.Accept()
 	length, _ := conn.Read(received)
 	
 	println(length)
@@ -15,7 +15,7 @@ func receive(){
 
 
 func send(){
-	sendAddr, _ := net.ResolveTCPAddr("tcp", "129.241.187.148:33546")
+	sendAddr, _ := net.ResolveTCPAddr("tcp4", "129.241.187.148:33546")
 	conn, _ :=net.DialTCP("tcp", nil, sendAddr)
 	
 	a := "Connect to: 129.241.187.148:33546\x00"
@@ -27,6 +27,6 @@ func send(){
 
 
 func main(){
-	receive()
 	send()
+	receive()
 }
