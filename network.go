@@ -11,36 +11,58 @@ type message struct{
 	length int
 }
 
-func receive() (rec string){
+func connectMaster() (connection *net.UDPConn){
+	sendAddr, err := net.ResolveUDPAddr("udp", "129.241.187.136:20015")
+	conn, err2 := net.DialUDP("udp", nil, sendAddr)
+
+	if (err != nil || err2 != nil){
+		println("Kunne ikke koble til!")
+		return nil
+	}
+	
+	return conn
+}
+
+func receive(conn *net.UDPConn) (rec string){
 	received := make([]byte,1024)
 	recAddr, _ := net.ResolveUDPAddr("udp", ":30000")
 	conn1, _ := net.ListenUDP("udp", recAddr)
 
 	length, _, _ := conn1.ReadFromUDP(received)
 	println(length)
-
+	println(string(received))
 	return string(received)
 }
 
-func send(s string){
-	sendAddr, _ := net.ResolveUDPAddr("udp", "129.241.187.255:20015")
-	conn, _ := net.DialUDP("udp", nil, sendAddr)
+func send(s string, conn *net.UDPConn){
+	/*sendAddr, err := net.ResolveUDPAddr("udp", "129.241.187.255:20015")
+	conn, err2 := net.DialUDP("udp", nil, sendAddr)
+
+	if (err != nil){
+		println("Kunne ikke koble til!")
+		return
+	}
+	
+	if (err2 != nil){
+		println("Kunne ikke koble til!")
+		return
+	}*/
 
 	b := []byte(s)
 	
 	rec, _ := conn.Write(b)
-	println(rec)
+	println("hei!",rec)
 }
 
-func sendMessage(m *message){
+func sendMessage(m *message, conn *net.UDPConn){
 	messageString := m.from + "+" + m.to + "+" + m.message + "+" + strconv.Itoa(m.length)
-	println(messageString)
+	//println(messageString)
 
-	//send(messageString)
+	send(messageString, conn)
 }
 
-func receiveMessage() (melding *message){
-	mess := receive()
+func receiveMessage(conn *net.UDPConn) (melding *message){
+	mess := receive(conn)
 	//println(mess)
 
 	//mess := "Data1+Data2+Heisann+1" 	
@@ -69,4 +91,12 @@ func main(){
 	m.to = "Data2"
 	m.message = "Heisann"
 	m.length = 1
+
+	/*x := true
+	for ; x ; {
+		sendMessage(m)
+	}*/
+	conn := connectMaster()
+	sendMessage(m, conn)
+	receive(conn)
 }
