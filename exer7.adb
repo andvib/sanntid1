@@ -1,18 +1,17 @@
 with Ada.Text_IO, Ada.Integer_Text_IO, Ada.Numerics.Float_Random;
 use Ada.Text_IO, Ada.Integer_Text_IO, Ada.Numerics.Float_Random;
-procedure exercise7 is
+procedure exer7 is
 
 		Count_Failed : exception; -- Exception to be raised when counting fails
 		Gen : Generator; -- Random number generator
 		
 		protected type Transaction_Manager (N : Positive) is
 			entry Finished;
-			function Commit return Boolean;
+			entry Wait_Until_Aborted;
 			procedure Signal_Abort;
 		private
 			Finished_Gate_Open : Boolean := False;
 			Aborted : Boolean := False;
-			Should_Commit : Boolean := True;
 		end Transaction_Manager;
 		protected body Transaction_Manager is
 		
@@ -21,29 +20,27 @@ procedure exercise7 is
 
 			if Finished'Count = N - 1 then
 				Finished_Gate_Open := True;
-				Should_Commit := True;
 			end if;
 
 			if Finished'Count = 0 then
 				Finished_Gate_Open := False;
 				Aborted := False;
 			end if;
-
-			if Aborted then
-				Should_Commit := False;
-			end if;
 				
 		end Finished;
+
+		entry Wait_Until_Aborted when Aborted = True is begin
+			if Wait_Until_Aborted'Count = 0 then
+				Aborted := False;
+			end if;
+		end Wait_Until_Aborted;
+			
 
 		procedure Signal_Abort is
 		begin
 			Aborted := True;
 		end Signal_Abort;
 
-		function Commit return Boolean is
-		begin
-				return Should_Commit;
-		end Commit;
 	end Transaction_Manager;
 
 	function Unreliable_Slow_Add (x : Integer) return Integer is
@@ -72,27 +69,27 @@ procedure exercise7 is
 		Put_Line ("Worker" & Integer'Image(Initial) & " started");
 		
 		loop
-			Put_Line ("Worker" & Integer'Image(Initial) & " started round" & Integer'Image(Round_Num));
-			Round_Num := Round_Num + 1;
-			
-			begin
+			Put_Line ("Worker" & Integer'Image(Initial) & " started round" & 						Integer'Image(Round_Num));
+
+			select
+				Manager.Wait_Until_Aborted;
+					Num := Prev + 5;
+			then abort
+				begin
 				Num := Unreliable_Slow_Add(Num);
-			exception
-				when Count_Failed =>
-					Manager.Signal_Abort;
-					Put_Line ("Worker" & Integer'Image(Initial) & " failed!");
-			end;
+				exception
+					when Count_Failed =>
+						Put_Line ("Worker" & Integer'Image(Initial) & " failed!");
+						Manager.Signal_Abort;
+					end;
+				Manager.Finished;
+			end select;
 
-			Manager.Finished;
+			Round_Num := Round_Num + 1;
 
-			if Manager.Commit = True then
-				Put_Line (" Worker" & Integer'Image(Initial) & " comitting" & Integer'Image(Num));
-			else
-				Put_Line (" Worker" & Integer'Image(Initial) &
-				" reverting from" & Integer'Image(Num) &
-				" to" & Integer'Image(Prev));
-				Num := Prev;
-			end if;
+			Put_Line (" Worker" & Integer'Image(Initial) & " comitting" & 							Integer'Image(Num));
+			Prev := Num;
+			
 
 			Prev := Num;
 			delay 0.5;
@@ -107,4 +104,4 @@ procedure exercise7 is
 	begin
 		Put_Line("STARTING");
 		Reset(Gen); -- Seed the random number generator
-end exercise7;
+end exer7;
